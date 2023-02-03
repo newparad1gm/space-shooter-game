@@ -3,13 +3,12 @@ import * as THREE from 'three';
 import { OctreeHelper } from "three/examples/jsm/helpers/OctreeHelper";
 import { Octree } from "three/examples/jsm/math/Octree";
 import { CSSPlane } from '../game/CSSPlane';
-import { Model, Explosion } from '../Types';
+import { Model, Explosion, Rock, JsonResponse } from '../Types';
 import { Utils } from '../Utils';
 
 export class World {
-    NUM_SPHERES: number = 100;
-    SPHERE_RADIUS: number = 0.2;
-
+    GRAVITY: number = 0;
+    
     octree: Octree;
     helper: OctreeHelper;
     cssPlanes: CSSPlane[];
@@ -21,25 +20,35 @@ export class World {
     screenDimensions: THREE.Vector2;
     screenPos: THREE.Vector3;
 
-    splatters: THREE.Mesh[];
     explosions: Explosion[];
     setExplosions?: React.Dispatch<React.SetStateAction<Explosion[]>>;
     explosionTimeout: NodeJS.Timeout | undefined;
-    spheres: Model[];
-    sphereIdx = 0;
+
+    meshIdToRockId: Map<string, string>;
+    idToRock: Map<string, Rock>;
+    rocks: Rock[];
+    setRocks?: React.Dispatch<React.SetStateAction<Rock[]>>;
+    rockGroup: THREE.Group;
+    firstRock?: Rock;
+    rockCount: number = 0;
+
+    currentRock?: Rock;
+    setCurrentRock?: React.Dispatch<React.SetStateAction<Rock | undefined>>;
 
     constructor() {
         this.octree = new Octree();
         this.helper = new OctreeHelper(this.octree, new THREE.Color(0x88ccee));
         this.helper.visible = false;
         this.cssPlanes = [];
-        this.spheres = [];
         this.cssScene = new THREE.Scene();
         this.worldScene = new THREE.Scene();
         this.screenDimensions = new THREE.Vector2();
         this.screenPos = new THREE.Vector3();
-        this.splatters = [];
         this.explosions = [];
+        this.rocks = [];
+        this.meshIdToRockId = new Map();
+        this.idToRock = new Map();
+        this.rockGroup = new THREE.Group();
     }
 
     renderCSSPlanes = () => {
@@ -47,26 +56,6 @@ export class World {
             for (const plane of this.cssPlanes) {
                 plane.renderObject(this.scene);
             }
-        }
-    }
-
-    createSpheres = () => {
-        if (!this.scene) {
-            return;
-        }
-
-        const sphereGeometry = new THREE.IcosahedronGeometry(this.SPHERE_RADIUS, 5);
-        const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xbbbb44 });
-
-        for (let i = 0; i < this.NUM_SPHERES; i++) {
-            const sphere = Utils.createModel(sphereGeometry, sphereMaterial);
-            this.scene.add(sphere);
-
-            this.spheres.push({
-                mesh: sphere,
-                collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), this.SPHERE_RADIUS),
-                velocity: new THREE.Vector3()
-            });
         }
     }
 
@@ -89,12 +78,60 @@ export class World {
         }
     }
 
-    addExplosion = (object: THREE.Object3D) => {
+    shootRay = (raycaster: THREE.Raycaster) => {
+        const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
+        raycaster.layers.set(1);
+        raycaster.intersectObject(this.rockGroup, true, intersects);
+        if (intersects.length) {
+            const intersection = intersects[0];
+            const object = intersection.object;
+
+            object.traverse(child => {
+                if (child instanceof THREE.Mesh) {
+                    const rockId = this.meshIdToRockId.get(child.uuid);
+                    if (rockId && this.idToRock.has(rockId)) {
+                        this.setCurrentRock && this.setCurrentRock(this.idToRock.get(rockId));
+                    }
+                }
+            });
+        }
+    }
+
+    destroyRock = (rockId: string) => {
+        if (this.idToRock.has(rockId)) {
+            const rock = this.idToRock.get(rockId)!;
+            rock.mesh && this.addExplosion(rock.position, rock.mesh);
+            this.setRocks && this.setRocks(this.rocks.filter(r => r.guid !== rock.guid));
+            this.idToRock.delete(rock.guid);
+            rock.mesh && this.meshIdToRockId.delete(rock.mesh.uuid);
+            this.setCurrentRock && this.setCurrentRock(undefined);
+        }
+    }
+
+    addExplosion = (position: THREE.Vector3, object: THREE.Object3D) => {
         if (this.setExplosions) {
             const now = Date.now();
-            this.setExplosions([...this.explosions, { guid: object.id, position: object.position, scale: 2, time: now }]);
+            this.setExplosions([...this.explosions, { guid: object.id, position: position, scale: 1, time: now }]);
             clearTimeout(this.explosionTimeout);
             this.explosionTimeout = setTimeout(() => this.setExplosions!(this.explosions.filter(({ time }) => now - time <= 1000)), 1000);
         }
+    }
+
+    addRock = (rockData: JsonResponse) => {
+        let zPos = 25 + this.rockCount * 10;
+        /*if (this.firstRock) {
+            zPos += (rockData.time - this.firstRock.data.time) / 1000;
+        }*/
+        const rock: Rock = {
+            guid: rockData.id,
+            position: new THREE.Vector3((-1 + Math.random() * 2) * 20, (-1 + Math.random() * 2) * 20, zPos),
+            data: rockData
+        }
+        if (!this.firstRock) {
+            this.firstRock = rock;
+        }
+        this.idToRock.set(rock.guid, rock);
+        this.setRocks && this.setRocks([...this.rocks, rock]);
+        this.rockCount += 1;
     }
 }

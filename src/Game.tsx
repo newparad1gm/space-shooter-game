@@ -1,29 +1,23 @@
-import React, { useEffect, createRef, useCallback, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GUI } from 'lil-gui';
 import { Player } from './game/Player';
 import { Engine } from './game/Engine';
-import { Network } from './game/Network';
 import { WorldLoader, WorldName } from './world/WorldLoader';
-import { NewWindow } from './NewWindow';
-import { GameOptions } from './options/GameOptions';
-import { Utils } from './Utils';
-import { SimpleVector } from './Types';
+import { Hud } from './options/GameOptions';
 import './Game.css';
 
-const WebSocketHost = process.env.REACT_APP_WEBSOCKET_CONNECTION || window.location.origin.replace(/^http/, 'ws');
-const client = new WebSocket(WebSocketHost);
 
 export const Game = (): JSX.Element => {
     const player = useMemo(() => new Player('single', 'Your Name', 'Soldier.glb'), []);
     const engine = useMemo(() => new Engine(player), [player]);
+    [ engine.client, engine.setClient ] = useState<WebSocket>();
     const [ gameStarted, setGameStarted ] = useState<boolean>(false);
-    const [ network, setNetwork ] = useState<Network>();
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
-    const glRef = createRef<HTMLDivElement>();
-    const cssRef = createRef<HTMLDivElement>();
-    const divRef = createRef<HTMLDivElement>();
+    const glRef = useRef<HTMLDivElement>(null);
+    const cssRef = useRef<HTMLDivElement>(null);
+    const divRef = useRef<HTMLDivElement>(null);
     
     const initContainer = () => {
         if (glRef.current && engine.controls) {
@@ -40,19 +34,30 @@ export const Game = (): JSX.Element => {
         }
     }
 
-    const disconnectGame = useCallback(() => {
-        console.log('Disconnected');
-        if (network) {
-            network.stopClient();
-            setNetwork(undefined);
-        }
-    }, [network]);
+    useEffect(() => {
+        if (engine.client) {
+            const client = engine.client;
+            
+            client.onopen = () => {
+                setGameStarted(true);
+                console.log('Connected');
+            };
 
-    const startNetwork = useCallback((interval?: number): Network => {
-        const newNetwork = new Network(client, engine, interval);
-        setNetwork(newNetwork);
-        return newNetwork;
-    }, [engine]);
+            client.onmessage = (message) => {
+                let messageData;
+                try {
+                    messageData = JSON.parse(message.data as string);
+                } catch (e) {
+                    messageData = JSON.parse(JSON.stringify(message.data));
+                }
+                if (messageData.new) {
+                    engine.world.addRock(messageData.new);
+                } else if (messageData.started) {
+                    engine.world.destroyRock(messageData.started.id);
+                }
+            };
+        }
+    }, [engine.client])
 
     const startGame = () => {
         const gui = new GUI({ width: 200 });
@@ -79,60 +84,6 @@ export const Game = (): JSX.Element => {
     }
 
     useEffect(() => {
-        client.onopen = () => {
-            console.log('Connected');
-        };
-
-        client.onmessage = (message) => {
-            let messageData;
-            try {
-                messageData = JSON.parse(message.data as string);
-            } catch (e) {
-                messageData = JSON.parse(JSON.stringify(message.data));
-            }
-            let currNetwork = network;
-            if (messageData.hasOwnProperty('connected')) {
-                player.playerID = messageData.connected;
-                player.isLead = messageData.isLead;
-                currNetwork = startNetwork(messageData.interval);
-            } else if (messageData.hasOwnProperty('state')) {
-                if (network) {
-                    network.updateState(messageData.state);
-                }
-            } else if (messageData.hasOwnProperty('screenData')) {
-                if (divRef.current) {
-                    divRef.current.innerHTML = messageData.screenData;
-                }
-            } else if (messageData.hasOwnProperty('clearWorld')) {
-                engine.clearSplatters();
-            }
-
-            if (messageData.started && currNetwork) {
-                if (Utils.checkEnum(WorldName, messageData.world)) {
-                    const worldName = messageData.world as WorldName;
-                    setWorldName(worldName);
-                    const screenDimensions: SimpleVector = messageData.screenDimensions;
-                    const screenPos: SimpleVector = messageData.screenPos;
-                    engine.world.screenDimensions.set(screenDimensions.x, screenDimensions.y);
-                    engine.world.screenPos.set(screenPos.x, screenPos.y, screenPos.z);
-                    currNetwork.startClient();
-                    setGameStarted(true);
-                }
-            }
-        };
-
-        client.onerror = (error) => {
-            console.log('Error on connection');
-            console.log(error);
-            disconnectGame();
-        }
-
-        client.onclose = () => {
-            disconnectGame();
-        }
-    }, [engine, player, network, divRef, startNetwork, disconnectGame]);
-
-    useEffect(() => {
         if (cssRef.current) {
             const renderer = engine.startCSSRenderer();
             engine.setupCSSRenderer();
@@ -151,15 +102,14 @@ export const Game = (): JSX.Element => {
                         engine.camera = camera as THREE.PerspectiveCamera;
                         engine.renderer = gl;
                         engine.world.scene = scene;
+                        engine.camera.layers.enable(1);
                         engine.world.scene.add(engine.camera);
                 }}>
                     <WorldLoader engine={engine} worldName={worldName} divRef={divRef} startGame={startGame}/>
                 </Canvas>
             </div> }
-            <div id='hud' className='jira-view' ref={divRef}/>
-            <NewWindow>
-                <GameOptions worldName={worldName} setWorldName={setWorldName} engine={engine} client={client} gameStarted={gameStarted}/>
-            </NewWindow>
+            <Hud worldName={worldName} setWorldName={setWorldName} engine={engine} gameStarted={gameStarted}/>
+            <div id='screen' ref={divRef}/>
         </div>
     )
 }

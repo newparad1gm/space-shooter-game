@@ -1,4 +1,4 @@
-import React, { createRef } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
@@ -10,7 +10,7 @@ interface CrosshairProps {
 
 export const Crosshair = (props: CrosshairProps): JSX.Element => {
     const { engine } = props;
-    const lines = createRef<THREE.Group>();
+    const lines = useRef<THREE.Group>(null);
 
     useFrame(() => {
         if (lines.current && engine.camera) {

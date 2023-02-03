@@ -9,10 +9,17 @@ export class Controls {
     protected player: Player;
 
     mouseHelper: THREE.Mesh;
+    spotLight: THREE.SpotLight;
 
     constructor(camera: THREE.PerspectiveCamera, player: Player) {
         this.camera = camera;
         this.camera.rotation.order = 'YXZ';
+
+        this.spotLight = new THREE.SpotLight(0xffffff, 10, 100, Math.PI * 0.1, 1);
+        this.camera.add(this.spotLight);
+        this.spotLight.position.set(0, 0, 1);
+        this.spotLight.target = camera;
+        
         this.player = player;
 
         this.mouseHelper = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 10 ), new THREE.MeshNormalMaterial() );

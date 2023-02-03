@@ -16,6 +16,10 @@ export const Explosions = (props: ExplosionsProps): JSX.Element => {
     );
 }
 
+const randomVector = () => {
+    return -1 + Math.random() * 2;
+}
+
 const make = (color: string, speed: number) => {
     return {
         ref: createRef(),
@@ -24,7 +28,7 @@ const make = (color: string, speed: number) => {
             .fill(undefined)
             .map(() => [
                 new THREE.Vector3(),
-                new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(speed * 0.75)
+                new THREE.Vector3(randomVector(), randomVector(), randomVector()).normalize().multiplyScalar(speed * 0.75)
             ])
     }
 }

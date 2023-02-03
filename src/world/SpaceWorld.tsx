@@ -7,6 +7,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import { World } from './World';
 import { Explosions } from './Explosions';
+import { Rocks } from './Rocks';
+import { Explosion, Rock } from '../Types';
+import { useLoader } from '@react-three/fiber';
+import { SphereGeometry } from 'three';
 
 interface WorldProps {
     world: World;
@@ -17,7 +21,10 @@ interface WorldProps {
 export const SpaceWorld = (props: WorldProps): JSX.Element => {
 	const { world, startGame, divRef } = props;
 	const sceneRef = useRef<THREE.Scene>(null);
+    [ world.explosions, world.setExplosions ] = useState<Explosion[]>([]);
+    [ world.rocks, world.setRocks ] = useState<Rock[]>([]);
     const count = 2000;
+    const [earth, moon] = useLoader(THREE.TextureLoader, ['/textures/earth.jpg', '/textures/moon.png']);
     
     const positions = useMemo(() => {
         let positions = []
@@ -36,7 +43,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     }, [count]);
 
     useEffect(() => {
-		if (sceneRef.current && divRef.current) {
+		if (sceneRef.current && divRef.current && world.setRocks) {
 			const object = world.addScreen(divRef.current);
 			if (object) {
 				sceneRef.current.add(object);
@@ -54,17 +61,29 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
 			<scene ref={sceneRef}>
                 <fog attach="fog" args={['#070710', 100, 700]} />
                 <ambientLight intensity={0.25} />
-                <mesh>
-                    <sphereGeometry args={[5, 32, 32]} />
-                    <meshBasicMaterial color="#FFFF99" fog={false} />
-                </mesh>
                 <points>      
                     <bufferGeometry attach="geometry">
                         <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
                     </bufferGeometry>
                     <pointsMaterial size={15} sizeAttenuation color="white" fog={false} />
                 </points>
+                <Rocks world={world} />
                 <Explosions explosions={world.explosions} />
+                <group scale={[100, 100, 100]} position={[-500, -200, 1000]}>
+                    <mesh>
+                        <sphereGeometry args={[5, 32, 32]} />
+                        <meshStandardMaterial map={earth} roughness={1} fog={false} />
+                    </mesh>
+                    <mesh position={[15, 0, -5]}>
+                        <sphereGeometry args={[0.8, 32, 32]} />
+                        <meshStandardMaterial map={moon} roughness={1} fog={false} />
+                    </mesh>
+                    <mesh position={[10, 5, 60]}>
+                        <sphereGeometry args={[10, 32, 32]} />
+                        <meshBasicMaterial color='#FFFF99' fog={false} />
+                        <pointLight distance={6100} intensity={50} color='white' />
+                    </mesh>
+                </group>
 			</scene>
 		</group>
 	)

@@ -13,7 +13,6 @@ export class Player {
     orientation: THREE.Euler;
     onFloor: boolean;
     model?: AnimatedModel;
-    isLead: boolean;
 
     readonly height: number = 1.66;
 
@@ -33,7 +32,6 @@ export class Player {
             this.model = new AnimatedModel(modelPath);
         }
         this.nameLabel = new TextLabel(this.playerName);
-        this.isLead = false;
     }
 
     loadPlayer = (scene: THREE.Scene) => {
@@ -51,8 +49,8 @@ export class Player {
     }
 
     initializeCollider = () => {
-        this.collider.start.set(-5, 0.35, 5);
-        this.collider.end.set(-5, this.height, 5);
+        this.collider.start.set(0, 0.35, 0);
+        this.collider.end.set(0, this.height, 0);
         this.collider.radius = 0.35;
     }
 
