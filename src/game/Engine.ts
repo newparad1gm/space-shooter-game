@@ -179,6 +179,7 @@ export class Engine {
             this.playerCollisions(this.player);
             this.updatePlayers(deltaTime);
             this.camera.position.copy(this.player.collider.end);
+            this.world.cameraObjects.position.copy(this.camera.position);
             this.setRay();
             //this.teleportPlayerIfOob();
         }

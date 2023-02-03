@@ -8,7 +8,7 @@ import { Utils } from '../Utils';
 
 export class World {
     GRAVITY: number = 0;
-    
+
     octree: Octree;
     helper: OctreeHelper;
     cssPlanes: CSSPlane[];
@@ -35,6 +35,8 @@ export class World {
     currentRock?: Rock;
     setCurrentRock?: React.Dispatch<React.SetStateAction<Rock | undefined>>;
 
+    cameraObjects: THREE.Object3D;
+
     constructor() {
         this.octree = new Octree();
         this.helper = new OctreeHelper(this.octree, new THREE.Color(0x88ccee));
@@ -49,6 +51,7 @@ export class World {
         this.meshIdToRockId = new Map();
         this.idToRock = new Map();
         this.rockGroup = new THREE.Group();
+        this.cameraObjects = new THREE.Object3D;
     }
 
     renderCSSPlanes = () => {
@@ -82,6 +85,7 @@ export class World {
         const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
         raycaster.layers.set(1);
         raycaster.intersectObject(this.rockGroup, true, intersects);
+        this.setCurrentRock && this.setCurrentRock(undefined);
         if (intersects.length) {
             const intersection = intersects[0];
             const object = intersection.object;
@@ -113,7 +117,7 @@ export class World {
             const now = Date.now();
             this.setExplosions([...this.explosions, { guid: object.id, position: position, scale: 1, time: now }]);
             clearTimeout(this.explosionTimeout);
-            this.explosionTimeout = setTimeout(() => this.setExplosions!(this.explosions.filter(({ time }) => now - time <= 1000)), 1000);
+            this.explosionTimeout = setTimeout(() => this.setExplosions!(this.explosions.filter(({ time }) => Date.now() - time <= 1000)), 1000);
         }
     }
 

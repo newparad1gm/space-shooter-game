@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three';
 import { GUI } from 'lil-gui';
 import { Player } from './game/Player';
@@ -106,6 +107,9 @@ export const Game = (): JSX.Element => {
                         engine.world.scene.add(engine.camera);
                 }}>
                     <WorldLoader engine={engine} worldName={worldName} divRef={divRef} startGame={startGame}/>
+                    <EffectComposer>
+                        <Bloom luminanceThreshold={1} luminanceSmoothing={0.9} height={300} />
+                    </EffectComposer>
                 </Canvas>
             </div> }
             <Hud worldName={worldName} setWorldName={setWorldName} engine={engine} gameStarted={gameStarted}/>

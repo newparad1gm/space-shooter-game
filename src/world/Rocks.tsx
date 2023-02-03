@@ -47,11 +47,15 @@ export const Rock = (props: RockProps): JSX.Element => {
     const scale = useMemo(() => new THREE.Vector3(randomScale(), randomScale(), randomScale()), []);
     const textMaterial = useMemo(() => {
         const canvas = document.createElement('canvas');
+        canvas.width = 1000;
+        canvas.height = 50;
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.font = '50px Georgia';
             ctx.fillStyle = '#ff0000';
-            ctx.fillText(JSON.stringify(rock.data.activity.name), 0, 50);
+            ctx.textBaseline = 'middle'
+            ctx.textAlign = 'center';
+            ctx.fillText(rock.data.activity.name, canvas.width / 2, canvas.height / 2);
 
             const texture = new THREE.Texture(canvas);
             texture.needsUpdate = true;
@@ -70,7 +74,7 @@ export const Rock = (props: RockProps): JSX.Element => {
   
     return (
         <group position={rock.position}>
-            <sprite position={[0, (scale.y / 2) + 2, 0]} material={textMaterial} scale={[5, 3, 1]}/>
+            <sprite position={[0, (scale.y / 2) + 2, 0]} material={textMaterial} scale={[30, 3, 1]}/>
             <mesh ref={mesh} geometry={geometry} material={material} material-roughness={1} material-metalness={0.5} layers={1} scale={scale} />
         </group>
     )

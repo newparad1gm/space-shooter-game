@@ -55,7 +55,7 @@ export const Explosion = (props: ExplosionProps): JSX.Element => {
                         dummy.updateMatrix();
                         mesh.setMatrixAt(i, dummy.matrix);
                     })
-                    mesh.material.opacity -= 0.025;
+                    mesh.material.opacity -= mesh.material.opacity > 0 ? 0.025 : 0;
                     mesh.instanceMatrix.needsUpdate = true;
                 }
             }
@@ -67,7 +67,7 @@ export const Explosion = (props: ExplosionProps): JSX.Element => {
             {particles.map(({ color, data }, index) => (
                 <instancedMesh key={index} args={[undefined, undefined, data.length]} frustumCulled={false}>
                     <dodecahedronGeometry args={[10, 0]} />
-                    <meshBasicMaterial color={color} transparent opacity={1} fog={false} />
+                    <meshBasicMaterial color={color} transparent opacity={1} fog={false} toneMapped={false} />
                 </instancedMesh>
             ))}
         </group>

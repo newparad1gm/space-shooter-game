@@ -14,18 +14,20 @@ interface HudProps {
 export const Hud = (props: HudProps): JSX.Element => {
     const { engine, gameStarted, worldName, setWorldName } = props;
     [ engine.world.currentRock, engine.world.setCurrentRock ] = useState<Rock>();
-    const hudRef = useRef<HTMLDivElement>(null);
+    const preRef = useRef<HTMLPreElement>(null);
 
     useEffect(() => {
-        if (hudRef.current && engine.world.currentRock) {
-            hudRef.current.innerHTML = JSON.stringify(engine.world.currentRock.data);
+        if (preRef.current) {
+            preRef.current.innerHTML = engine.world.currentRock ? JSON.stringify(engine.world.currentRock.data, undefined, 2) : '';
         }
-    }, [hudRef, engine.world.currentRock])
+    }, [preRef, engine.world.currentRock])
 
     return (
         <div id = 'hud'>
             { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} engine={engine}/> }
-            <div id='rockData' ref={hudRef}></div>
+            <div id='rockData' >
+                <pre ref={preRef}/>
+            </div>
         </div>
     )
 }

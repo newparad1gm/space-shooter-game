@@ -37,11 +37,12 @@
     right: 0;
     height: 300px;
     width: 500px;
-    background-color: white;
+    filter: alpha(opacity=90);
     z-index: 100;
 }
 
 #rockData {
     text-align: left;
     overflow-wrap: break-word;
+    color: red;
 }
