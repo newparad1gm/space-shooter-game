@@ -3,8 +3,7 @@ import * as THREE from 'three';
 import { OctreeHelper } from "three/examples/jsm/helpers/OctreeHelper";
 import { Octree } from "three/examples/jsm/math/Octree";
 import { CSSPlane } from '../game/CSSPlane';
-import { Model, Explosion, Rock, JsonResponse } from '../Types';
-import { Utils } from '../Utils';
+import { Explosion, Rock, JsonResponse } from '../Types';
 
 export class World {
     GRAVITY: number = 0;
@@ -51,7 +50,7 @@ export class World {
         this.meshIdToRockId = new Map();
         this.idToRock = new Map();
         this.rockGroup = new THREE.Group();
-        this.cameraObjects = new THREE.Object3D;
+        this.cameraObjects = new THREE.Object3D();
     }
 
     renderCSSPlanes = () => {

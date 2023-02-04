@@ -60,7 +60,7 @@ export const Explosion = (props: ExplosionProps): JSX.Element => {
                 }
             }
         });
-    })
+    });
   
     return (
         <group ref={group} position={position} scale={[scale, scale, scale]}>

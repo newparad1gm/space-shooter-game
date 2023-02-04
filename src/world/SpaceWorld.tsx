@@ -49,8 +49,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             sceneRef.current.add(world.cameraObjects);
             world.cameraObjects.add(planetsRef.current);
 
-			startGame();
-		}
+            startGame();
+        }
     }, [world, divRef, sceneRef, planetsRef, startGame]);
 
 	return (
@@ -75,7 +75,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                         <sphereGeometry args={[0.8, 32, 32]} />
                         <meshStandardMaterial map={moon} roughness={1} fog={false} />
                     </mesh>
-                    <mesh position={[10, 5, 60]}>
+                    <mesh position={[10, 40, 60]}>
                         <sphereGeometry args={[10, 32, 32]} />
                         <meshStandardMaterial emissive='yellow' emissiveIntensity={3} toneMapped={false} />
                         <pointLight distance={6100} intensity={50} color='white' />

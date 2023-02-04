@@ -10,10 +10,10 @@ interface RocksProps {
 
 export const Rocks = (props: RocksProps): JSX.Element => {
     const { world } = props;
-    const rockModel = useGLTF('/gltf/rock.gltf');
+    const { nodes, materials } = useGLTF('/gltf/rock.gltf');
     const rockGroup = useRef<THREE.Group>(null);
     const rockGeometry = useMemo(() => {
-        const nodeMaterial = rockModel.nodes.node_id4_Material_52_0 as THREE.Mesh;
+        const nodeMaterial = nodes.node_id4_Material_52_0 as THREE.Mesh;
         return nodeMaterial.geometry;
     }, []);
 
@@ -25,7 +25,7 @@ export const Rocks = (props: RocksProps): JSX.Element => {
 
     return (
         <group ref={rockGroup}>
-            { world.rocks.map(rock => <Rock key={rock.guid} rock={rock} geometry={rockGeometry} material={rockModel.materials.Material_52} meshIdToRockId={world.meshIdToRockId} />) }
+            { world.rocks.map(rock => <Rock key={rock.guid} rock={rock} geometry={rockGeometry} material={materials.Material_52} meshIdToRockId={world.meshIdToRockId} />) }
         </group>
     );
 }

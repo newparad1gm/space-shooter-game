@@ -19,6 +19,7 @@ export const Game = (): JSX.Element => {
     const glRef = useRef<HTMLDivElement>(null);
     const cssRef = useRef<HTMLDivElement>(null);
     const divRef = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<HTMLInputElement>(null);
     
     const initContainer = () => {
         if (glRef.current && engine.controls) {
@@ -41,6 +42,12 @@ export const Game = (): JSX.Element => {
             
             client.onopen = () => {
                 setGameStarted(true);
+                if (timeoutRef.current && engine.client) {
+                    const timeout = Number(timeoutRef.current.value) ? Number(timeoutRef.current.value) * 1000 : 20000;
+                    engine.client.send(JSON.stringify({
+                        timeout: timeout
+                    }));
+                }
                 console.log('Connected');
             };
 
@@ -58,7 +65,7 @@ export const Game = (): JSX.Element => {
                 }
             };
         }
-    }, [engine.client])
+    }, [engine.client, engine.world])
 
     const startGame = () => {
         const gui = new GUI({ width: 200 });
@@ -112,7 +119,7 @@ export const Game = (): JSX.Element => {
                     </EffectComposer>
                 </Canvas>
             </div> }
-            <Hud worldName={worldName} setWorldName={setWorldName} engine={engine} gameStarted={gameStarted}/>
+            <Hud worldName={worldName} setWorldName={setWorldName} engine={engine} gameStarted={gameStarted} timeoutRef={timeoutRef}/>
             <div id='screen' ref={divRef}/>
         </div>
     )

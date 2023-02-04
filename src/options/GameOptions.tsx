@@ -9,10 +9,11 @@ interface HudProps {
     gameStarted: boolean;
     worldName: WorldName;
     setWorldName: React.Dispatch<React.SetStateAction<WorldName>>;
+    timeoutRef: React.RefObject<HTMLInputElement>;
 }
 
 export const Hud = (props: HudProps): JSX.Element => {
-    const { engine, gameStarted, worldName, setWorldName } = props;
+    const { engine, gameStarted, worldName, setWorldName, timeoutRef } = props;
     [ engine.world.currentRock, engine.world.setCurrentRock ] = useState<Rock>();
     const preRef = useRef<HTMLPreElement>(null);
 
@@ -24,7 +25,7 @@ export const Hud = (props: HudProps): JSX.Element => {
 
     return (
         <div id = 'hud'>
-            { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} engine={engine}/> }
+            { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} engine={engine} timeoutRef={timeoutRef} /> }
             <div id='rockData' >
                 <pre ref={preRef}/>
             </div>
@@ -36,10 +37,11 @@ interface GameStartOptionsProps {
     worldName: WorldName;
     setWorldName: React.Dispatch<React.SetStateAction<WorldName>>;
     engine: Engine;
+    timeoutRef: React.RefObject<HTMLInputElement>;
 }
 
 export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
-    const { worldName, setWorldName, engine } = props;
+    const { worldName, setWorldName, engine, timeoutRef } = props;
     const webSocketUrl = useRef<HTMLInputElement>(null);
 
     const startGame = useCallback(() => {
@@ -59,6 +61,7 @@ export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
                 )) }
             </select>
             <div>WebSocket: <input type='text' ref={webSocketUrl} defaultValue={process.env.REACT_APP_WEBSOCKET_CONNECTION || window.location.origin.replace(/^http/, 'ws')} /></div>
+            <div>Timeout (in seconds): <input type='number' min='5' max='60' ref={timeoutRef} defaultValue={20} /></div>
             <button onClick={startGame}>
                 Click to start
             </button>
