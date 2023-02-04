@@ -1,4 +1,4 @@
-import React, { createRef, useRef, useEffect, useMemo } from 'react';
+import React, { createRef, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Explosion as ExplosionType } from '../Types';
@@ -41,7 +41,7 @@ interface ExplosionProps {
 export const Explosion = (props: ExplosionProps): JSX.Element => {
     const { position, scale } = props;
     const group = useRef<THREE.Group>(null);
-    const dummy = useMemo(() => new THREE.Object3D, []);
+    const dummy = useMemo(() => new THREE.Object3D(), []);
     const particles = useMemo(() => [make('white', 0.8), make('orange', 0.6)], []);
 
     useFrame(() => {

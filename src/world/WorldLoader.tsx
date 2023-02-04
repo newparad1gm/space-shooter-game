@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react"
+import React, { Suspense } from "react"
 import { Engine } from "../game/Engine";
 import { Crosshair } from "../game/Crosshair";
 import { SpaceWorld } from "./SpaceWorld";
